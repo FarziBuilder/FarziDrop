@@ -3,11 +3,12 @@ local FREQUENCY = 1000
 local flag = 0
 local past_altitude = 0
 local altitude = 0
+local check_altitude = 0
 
 function update()
     -- Check if AHRS (Attitude and Heading Reference System) is healthy
     if not ahrs:healthy() then
-        gcs:send_text(5, "Waiting for AHRS initialization...")
+        gcs:send_text(5, "AHRS ka intezaar hai2...")
         return update, FREQUENCY
     end
 
@@ -22,7 +23,12 @@ function update()
 
         -- Check if the altitude is decreasing
         if past_altitude > altitude then
-            if (past_altitude - altitude) < 100 then
+            if flag == 0 then
+                check_altitude = past_altitude
+                flag = 1
+            end
+
+            if (check_altitude - altitude) < 20 then
                 gcs:send_text(5, "I am falling bruh!")
                 local mode_changed = vehicle:set_mode(5)  -- Example: 5 might be FBW
                 if mode_changed then
