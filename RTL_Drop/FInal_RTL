@@ -1,0 +1,46 @@
+-- Frequency of updates in milliseconds (ms)
+local FREQUENCY = 1000
+local altitude = 0
+local past_altitude = 0
+local flag = 0
+
+function update()
+    -- 1) Check if AHRS (Attitude and Heading Reference System) is healthy
+    if not ahrs:healthy() then
+        gcs:send_text(5, "Waiting for AHRS initialization...")
+        return update, FREQUENCY
+    end
+
+    -- 2) Get relative position in NED (North-East-Down) frame
+    local dist = ahrs:get_relative_position_NED_home()
+
+    if dist then
+        -- Convert 'down' to 'up' by multiplying with -1
+        altitude = -1 * dist:z()
+
+        -- 3) Check if altitude is significantly lower than past_altitude (by 40)
+        if altitude + 20 < past_altitude then
+            if flag == 0 then
+                gcs:send_text(6, "Switching to RTL")
+                vehicle:set_mode(11)  -- 11 usually indicates RTL mode
+                flag = 1
+            end
+        end
+
+        -- 4) If altitude has increased beyond past_altitude
+        if altitude > past_altitude then
+            past_altitude = altitude
+            gcs:send_text(5, string.format("New altitude: %.2f meters", altitude))
+        end
+
+        -- 5) Always send current altitude
+        gcs:send_text(5, string.format("Just altitude: %.2f meters", altitude))
+    else
+        gcs:send_text(5, "Unable to retrieve relative position.")
+    end
+
+    -- 6) Schedule the function again
+    return update, FREQUENCY
+end
+
+return update()
