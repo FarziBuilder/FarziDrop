@@ -49,28 +49,24 @@ local MIN_LAND_DIST = 100
 --------------------------------------------------------------------------------
 -- Example home coordinates (replace with actual or fetch from ahrs:get_home())
 --------------------------------------------------------------------------------
-local HOME_LAT = -35.3632484
-local HOME_LON = 149.1652702
+local HOME_LAT = 26.7618002
+local HOME_LON = 80.9850938
 local HOME_ALT = 0
 
-local LAND_LAT = -35.31106300
-local LAND_LON = 149.17268510
+local LAND_LAT = 26.7629755
+local LAND_LON = 80.9838634
 local LAND_ALT = 150.000000
 --------------------------------------------------------------------------------
 -- Array of possible "home" coordinates
 --------------------------------------------------------------------------------
 local possible_homes = {
     {
-        home = {lat = -35.3450953, lon = 149.1736507},
-        landing = {lat = -35.3452000, lon = 149.1737000}
+        home = {lat = 26.7618002, lon = 80.9850938},
+        landing = {lat = 26.7629755, lon = 80.9838634}
     },
     {
-        home = {lat = -35.3734621, lon = 149.1792083},
-        landing = {lat = -35.3735000, lon = 149.1792500}
-    },
-    {
-        home = {lat = -35.3151252, lon = 149.1931343},
-        landing = {lat = -35.3104676, lon = 149.2134333}
+        home = {lat = 26.7622768, lon = 80.9838707},
+        landing = {lat = 26.7618463, lon = 80.9864715}
     },
     -- Add more entries as needed
 }
