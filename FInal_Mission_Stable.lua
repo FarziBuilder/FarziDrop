@@ -31,8 +31,8 @@ local ALTI_DROP_WP2 = 10 --1000
 
 local MIN_ALTI_RTL = 55 --3000
 
-local HORI_DIST_MIS = 100 --500
-local ALTI_MIS = 200
+local HORI_DIST_MIS = 50 --500
+local ALTI_MIS = 10
 
 local CMD_DO_LAND = 189
 local CMD_LAND = 21 
