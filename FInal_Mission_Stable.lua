@@ -82,7 +82,7 @@ local wpt_lat_temp, wpt_lon_temp, wpt_alt_temp
 
 --------------------------------------------------------------------------------
 -- Change parameters
-local TRIM_THROT_LOW = 15
+local TRIM_THROT_LOW = 65
 local TRIM_THROT_HIGH = 80
 
 local TRIM_THROT = Parameter()      --creates a parameter object
