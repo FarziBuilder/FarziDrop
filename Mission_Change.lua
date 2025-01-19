@@ -4,27 +4,6 @@
 
     local mission_loaded = false
 
-    local function insert_waypoint_command(lat, lon, alt)
-        local cmd = mavlink_mission_item_int_t()
-        cmd.target_system    = 1
-        cmd.target_component = 190
-        cmd.seq              = 0
-        cmd.frame            = 3    -- MAV_FRAME_GLOBAL_RELATIVE_ALT
-        cmd.command          = 16   -- MAV_CMD_NAV_WAYPOINT
-        cmd.x                = math.floor(lat * 1e7)
-        cmd.y                = math.floor(lon * 1e7)
-        cmd.z                = alt  -- altitude in meters
-        cmd.param1           = 0
-        cmd.param2           = 0
-        cmd.param3           = 0
-        cmd.param4           = 0
-        cmd.current          = 2    -- 2 = "current WP"
-        cmd.autocontinue     = 1
-    
-        mission:add_command(cmd)
-    end
-
-
     -- This function sets up the mission waypoints as specified.
     local function read_mission()
         -- Clear any existing mission
