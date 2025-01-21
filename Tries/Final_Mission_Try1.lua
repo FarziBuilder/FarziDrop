@@ -397,7 +397,7 @@ function update()
             return update, FREQUENCY
         
         elseif compute_distance(curr_lat, curr_lon, HOME_LAT, HOME_LON) < 100 and current_state == STATE_RTL then
-            vehicle:set_mode(10)
+            vehicle:set_mode(6)
             assert(mission:clear(), 'Could not clear current mission')
             create_and_upload_mission(0, HOME_LAT, HOME_LON, HOME_ALT, 16)
             create_and_upload_mission(1, LAND_LAT, LAND_LON, LAND_ALT, 16)

@@ -24,7 +24,7 @@ local current_state = STATE_IDLE
 local MIN_DROP_ALTI_TRIGGER = 10 --20
 
 local HORI_DIST_DROP_WP1 = 50 --3000
-local ALTI_DROP_WP1 = 5 --3000
+local ALTI_DROP_WP1 = 20 --3000
 
 local HORI_DIST_DROP_WP2 = 50 --1000
 local ALTI_DROP_WP2 = 10 --1000
@@ -32,7 +32,7 @@ local ALTI_DROP_WP2 = 10 --1000
 local MIN_ALTI_RTL = 75 --3000
 
 local HORI_DIST_MIS = 50 --500
-local ALTI_MIS = 10
+local ALTI_MIS = 15
 
 local CMD_DO_LAND = 189
 local CMD_LAND = 21 
@@ -49,12 +49,12 @@ local MIN_LAND_DIST = 100
 --------------------------------------------------------------------------------
 -- Example home coordinates (replace with actual or fetch from ahrs:get_home())
 --------------------------------------------------------------------------------
-local HOME_LAT = 26.7624154
-local HOME_LON = 80.9841457
+local HOME_LAT = 17.5471927
+local HOME_LON = 78.0428869
 local HOME_ALT = 0
 
-local LAND_LAT = 26.7638266
-local LAND_LON = 80.9821434
+local LAND_LAT = 17.5426044
+local LAND_LON = 78.0414204
 local LAND_ALT = 65.000000
 --------------------------------------------------------------------------------
 -- Array of possible "home" coordinates 26.762544, 80.984242  26.760941, 80.985321
@@ -63,17 +63,18 @@ local LAND_ALT = 65.000000
 --------------------------------------------------------------------------------
 local possible_homes = {
     {
-        home = {lat = 26.762544, lon = 80.984242},
-        landing = {lat = 26.760941, lon = 80.985321}
+        home = {lat = 17.5471927, lon = 78.0428869},
+        landing = {lat = 17.5426044, lon = 78.0414204}
     },-- Add more entries as needed
     {
-        home = {lat = 26.761646, lon = 80.986101},
-        landing = {lat = 26.762839, lon = 80.983783}
+        home = {lat = 17.5471927, lon = 78.0428869},
+        landing = {lat = 17.5426044, lon = 78.0414204}
     }
 }
 
 --------------------------------------------------------------------------------
 -- We'll store the drop lat/lon once we detect the altitude drop.
+
 --------------------------------------------------------------------------------
 local drop_lat = 0
 local drop_lon = 0
