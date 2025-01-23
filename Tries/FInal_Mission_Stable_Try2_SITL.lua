@@ -5,7 +5,6 @@ local FREQUENCY    = 1000
 local altitude     = 0
 local past_altitude = 0
 local flag         = 0
-local flag_land     = 0
 local next_wpt_alt = 0
 local flag_servo   = 0
 ------------------------
@@ -16,8 +15,12 @@ local STATE_RTL = 2
 local STATE_LANDING = 3
 local STATE_RTL_ERROR = 4
 
+local SUB_STATE_NOT_CLOSE = 0
+local SUB_STATE_CLOSE = 1
+
 -- Initialize state
 local current_state = STATE_IDLE
+local current_sub_state = SUB_STATE_NOT_CLOSE
 --------------------------
 ------------------------------------------------------------------------------
 -- Custom paras
@@ -33,6 +36,9 @@ local ALTI_DROP_WP2 = 10 --1000
 local HORI_DIST_MIS = 70 --500
 local ALTI_MIS = 10
 
+local HORI_DIST_CLOSE = 400
+local ALTI_CLOSE = 100
+
 local CMD_DO_LAND = 189
 local CMD_LAND = 21 
 local CMD_FBW = 6
@@ -45,6 +51,7 @@ local MODE_FBW = 6
 
 local MIN_LAND_DIST = 5000
 local DROP_ALT = 28000
+
 
 local DROP_TIME = 0
 local DROP_TIMEOUT_MS =  9000 * 1000  -- 150 minutes
@@ -145,9 +152,9 @@ TRIM_THROT:init('TRIM_THROTTLE')       --get the physical location in parameters
 TRIM_THROT:set_and_save(TRIM_THROT_HIGH)  --retrieve that parameters value and assign to "parameter"
 
 ----------------------------
-local F_SERVO = 5
-local servo_channel = assert(SRV_Channels:find_channel(F_SERVO))
-SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1900,10000)
+-- local F_SERVO = 5
+-- local servo_channel = assert(SRV_Channels:find_channel(F_SERVO))
+-- SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1900,10000)
 --------------------------------------------------------------------------------
 -- Earth radius (for the calc_intermediate_waypoint logic)
 --------------------------------------------------------------------------------
@@ -404,18 +411,18 @@ function update()
         
         if current_state == STATE_IDLE then
             -- If altitude + MIN_DROP_ALTI_TRIGGER < past_altitude => significant drop
-            if altitude > DROP_ALT then
-                SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1100,10000)
-                gcs:send_text(6, "Servo Moved")
-                flag_servo = 1
-            end
+            -- if altitude > DROP_ALT then
+            --     SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1100,10000)
+            --     gcs:send_text(6, "Servo Moved")
+            --     flag_servo = 1
+            -- end
 
-            if DROP_TIME ~= 0 and (millis() - DROP_TIME) >= DROP_TIMEOUT_MS then
-                gcs:send_text(4, "10 minutes since arming have passed. Taking action.")
-                SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1100,10000)
-                gcs:send_text(6, "Servo Moved")
-                flag_servo = 1
-            end
+            -- if DROP_TIME ~= 0 and (millis() - DROP_TIME) >= DROP_TIMEOUT_MS then
+            --     gcs:send_text(4, "10 minutes since arming have passed. Taking action.")
+            --     SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1100,10000)
+            --     gcs:send_text(6, "Servo Moved")
+            --     flag_servo = 1
+            -- end
 
             if DROP_TIME ~= 0 and (millis() - DROP_TIME) >= DROP_TIMEOUT_MS2 then
                 
@@ -432,11 +439,11 @@ function update()
             if altitude + MIN_DROP_ALTI_TRIGGER < past_altitude then
                 
                 --gcs:send_text(6, string.format("Time is %.6f", (millis() - DROP_TIME)/1000))
-                if flag_servo == 0 then
-                    SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1100,10000)
-                    gcs:send_text(6, "Servo Move Earlier---")
-                    flag_servo = 1
-                end
+                -- if flag_servo == 0 then
+                --     SRV_Channels:set_output_pwm_chan_timeout(servo_channel, 1100,10000)
+                --     gcs:send_text(6, "Servo Move Earlier---")
+                --     flag_servo = 1
+                -- end
 
                 current_state = STATE_DROP_DETECTED
                 vehicle:set_mode(MODE_FBW)
@@ -540,13 +547,22 @@ function update()
                 gcs:send_text(6, string.format("Going to land at Lat=%.6f, Lng=%.6f", LAND_LAT, LAND_LON))
                 -- gcs:send_text(6, "RTL enabled")
                 return
-            elseif mission:get_current_nav_index() == seq + 1 then
+            elseif mission:get_current_nav_index() == seq + 1 and current_sub_state == SUB_STATE_NOT_CLOSE then
                  -- Next waypoint: 1km away, altitude minus 10
                  wpt_lat_temp, wpt_lon_temp, wpt_alt_temp =
                  calc_intermediate_waypoint(HOME_LAT, HOME_LON, wpt_lat_temp, wpt_lon_temp, HORI_DIST_MIS, altitude - ALTI_MIS)
                  seq = seq + 1
                  create_and_upload_mission(seq+1, wpt_lat_temp, wpt_lon_temp, wpt_alt_temp, CMD_WP)
                  gcs:send_text(6, string.format("Next wp at Lat=%.6f, Lng=%.6f", wpt_lat_temp, wpt_lon_temp))
+            elseif mission:get_current_nav_index() == seq + 1 and current_sub_state == SUB_STATE_CLOSE then
+                -- Next waypoint: 1km away, altitude minus 10
+                wpt_lat_temp, wpt_lon_temp, wpt_alt_temp =
+                calc_intermediate_waypoint(HOME_LAT, HOME_LON, drop_lat, drop_lon, HORI_DIST_CLOSE * state, altitude - ALTI_CLOSE)
+                seq = seq + 1
+                create_and_upload_mission(seq+1, wpt_lat_temp, wpt_lon_temp, wpt_alt_temp, CMD_WP)
+                state = -1 * state
+                gcs:send_text(6, string.format("Close to home, wp is at Lat=%.6f, Lng=%.6f", wpt_lat_temp, wpt_lon_temp))
+
             elseif altitude < item:z() then
                 seq = 0
                 gcs:send_text(6, string.format("Current alti=%.6f, wp_alti=%.6f", altitude, item:z()))
@@ -564,22 +580,15 @@ function update()
             end
         end
 
-        -- if current_state == STATE_RTL then
-        --     gcs:send_text(6, string.format("Next wp at Lat=%.6f, Lng=%.6f", item:x()*1.0e-7, item:y()*1.0e-7))
-        -- end
-
-        
-        if current_state == STATE_DROP_DETECTED then
-            local check_dist = compute_distance(curr_lat, curr_lon, HOME_LAT, HOME_LON)
-            gcs:send_text(6, string.format("THis is dist %.6f",check_dist))
-            if check_dist < MIN_LAND_DIST and flag_land == 0 then
-                flag_land = 1
-                TRIM_THROT:set_and_save(TRIM_THROT_MED)
-                HORI_DIST_MIS = 100 --500
-                ALTI_MIS = 250
-                gcs:send_text(6, "Bro just come duh!")
-            end
+        local check_dist = compute_distance(curr_lat, curr_lon, HOME_LAT, HOME_LON)
+        gcs:send_text(6, string.format("THis is dist %.6f",check_dist))
+        if check_dist < MIN_LAND_DIST and altitude > CLOSE_ALT and current_sub_state == SUB_STATE_NOT_CLOSE then
+            TRIM_THROT:set_and_save(TRIM_THROT_MED)
+            current_sub_state = SUB_STATE_CLOSE
+            
+            gcs:send_text(6, "Sub State now close to home!")
         end
+        
         -- Schedule again
     end)
 
