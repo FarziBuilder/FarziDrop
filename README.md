@@ -1,2 +1,2 @@
 # FarziDrop
-Triggering RTL in ardupilot
+Thou shalt bring back the drone
